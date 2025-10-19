@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/hooks/useStore";
+import { createTestAdminUser, loginAsAdmin } from "@/lib/admin-utils";
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login, register } = useStore();
+  const { login, register, setCurrentUser, setUserInfo } = useStore();
   const navigate = useNavigate();
 
   const [loginData, setLoginData] = useState({
@@ -85,6 +86,58 @@ const Auth = () => {
       toast({
         title: "Signup failed",
         description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdminAccess = async () => {
+    setIsLoading(true);
+    try {
+      // Try to login as admin first
+      try {
+        const adminResponse = await loginAsAdmin();
+        const userRole = adminResponse.role.toLowerCase() as
+          | "customer"
+          | "admin"
+          | "cashier";
+        setCurrentUser(userRole);
+        setUserInfo(adminResponse);
+
+        toast({
+          title: "Admin Access Granted!",
+          description: "You are now logged in as an administrator.",
+        });
+
+        navigate("/admin/products");
+        return;
+      } catch (loginError) {
+        console.log("Admin login failed, trying to create admin user...");
+      }
+
+      // If login fails, try to create admin user
+      const adminResponse = await createTestAdminUser();
+      const userRole = adminResponse.role.toLowerCase() as
+        | "customer"
+        | "admin"
+        | "cashier";
+      setCurrentUser(userRole);
+      setUserInfo(adminResponse);
+
+      toast({
+        title: "Admin User Created!",
+        description: "You are now logged in as an administrator.",
+      });
+
+      navigate("/admin/products");
+    } catch (error) {
+      console.error("Admin access failed:", error);
+      toast({
+        title: "Admin Access Failed",
+        description:
+          "Unable to create or login as admin user. Please contact support.",
         variant: "destructive",
       });
     } finally {
@@ -179,6 +232,23 @@ const Auth = () => {
                     <Button variant="link" className="text-sm">
                       Forgot your password?
                     </Button>
+                  </div>
+
+                  {/* Temporary Admin Access Button - Remove in production */}
+                  <div className="pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      className="w-full text-xs text-muted-foreground"
+                      onClick={handleAdminAccess}
+                      disabled={isLoading}
+                    >
+                      {isLoading
+                        ? "Creating Admin..."
+                        : "🔧 Admin Access (Testing)"}
+                    </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Temporary admin access for testing
+                    </p>
                   </div>
                 </form>
               </TabsContent>
