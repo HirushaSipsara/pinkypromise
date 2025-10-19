@@ -11,7 +11,7 @@ import {
   UpdateStockRequest
 } from '@/types/product';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pinkypromisebackend-production.up.railway.app/api';
 
 // Types for API requests and responses
 export interface AuthRequest {
