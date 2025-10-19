@@ -197,6 +197,11 @@ class ApiClient {
       }
     } catch (error) {
       console.error('❌ API request failed:', { url, error });
+      // Provide more detailed error information
+      if (error instanceof Error) {
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error stack:', error.stack);
+      }
       throw error;
     }
   }
